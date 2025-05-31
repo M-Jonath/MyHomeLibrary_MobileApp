@@ -1,13 +1,76 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
+import { StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { useSQLiteContext } from 'expo-sqlite';
+import { drizzle } from 'drizzle-orm/expo-sqlite';
+import * as schema from '@/db/schema';
+import { eq } from 'drizzle-orm';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { myStyles } from '@/constants/stylesheet';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
+  // Initialize SQLite database connection
+  const db = useSQLiteContext();
+  const drizzleDb = drizzle(db, { schema });
+
+  // State to hold books with details
+  const [booksWithDetails, setBooksWithDetails] = useState<schema.BookWithDetails[]>([]);
+  const [ownedStates, setOwnedStates] = useState<Record<number, boolean>>({});
+
+
+  const router = useRouter();
+
+  const getBooksWithDetails = async () => {
+    try {
+      const results = await drizzleDb
+        .select()
+        .from(schema.book)
+        .leftJoin(schema.author, eq(schema.book.author_id, schema.author.id))
+        .leftJoin(schema.series, eq(schema.book.series_id, schema.series.id))
+        .leftJoin(schema.genre, eq(schema.book.author_id, schema.genre.id))
+        .all();
+
+      // The structure of `results` will look like:
+      // [{ book: {...}, author: {...}, series: {...}, genre: {...} }]
+      
+      setBooksWithDetails(
+        results.map(({ book, author, series, genre }) => ({
+          book,
+          author: author ?? undefined,
+          series: series ?? undefined,
+          genre: genre ?? undefined,
+        }))
+      );
+    } catch (error) {
+      console.error('Error fetching books with details:', error);
+    }
+  };
+
+
+  // Fetch books on component mount
+  useEffect(() => {
+    getBooksWithDetails();
+    //const initialStates = Object.fromEntries(booksWithDetails.map(b => [b.book.id, b.book.owned === 1]));
+    //setOwnedStates(initialStates);
+  }, []);
+
+
+
+  // Re-fetch books when the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      getBooksWithDetails();
+    //  const initialStates = Object.fromEntries(booksWithDetails.map(b => [b.book.id, b.book.owned === 1]));
+    //  setOwnedStates(initialStates);
+    }, [])
+  );
+
   return (
+    // Render the ParallaxScrollView with a header image and book list
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
@@ -15,42 +78,102 @@ export default function HomeScreen() {
           source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
-      }>
+      }
+    >
+      {/* Title */}
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
+        <ThemedText type="title">Welcome To Your Digital Library!</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
+
+      {/* Subtitle */}
+      <ThemedView style={styles.titleContainer}>
+        <ThemedText type='subtitle'>Book List</ThemedText>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+
+
+      {/* Book List */}
+      <ThemedView style={{ padding: 16 }}>
+        {/* If no books are found, display a message */}
+        {booksWithDetails.length === 0 ? (
+          <ThemedText>No books found</ThemedText>
+        ) : (
+          booksWithDetails.map((b) => (
+            // Render each book with its details
+            <View key={b.book.id} style={{ marginBottom: 12, backgroundColor: '#202020', padding: 8, borderRadius: 8 }}>
+              <ThemedText style={{fontSize: 16, fontWeight: 'bold', color: 'white'}}>{b.book.title}</ThemedText>
+              <ThemedText style={{ color: 'white' }}>Author: {b.author?.name ?? 'Unknown'}</ThemedText>
+              <ThemedText style={{ color: 'white' }}>Series: {b.series?.name ?? 'Unknown'}</ThemedText>
+
+
+              {/* action buttons for each book */}
+              <View
+              style={{ 
+                flexDirection: 'row', 
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                gap: '10%',
+                borderRadius: 5, 
+                marginVertical:5, 
+                padding: 8, 
+                backgroundColor: '#202020' }}
+              >
+
+                
+                {/* Owned Switch */}
+                <View key={b.book.id}>
+                  <ThemedText style={{ fontSize:12, color: 'white' }}>Owned:</ThemedText>
+                  <Switch
+                    value={ownedStates[b.book.id] ?? false}
+                    onValueChange={async (newValue) => {
+                      setOwnedStates(prev => ({ ...prev, [b.book.id]: newValue }));
+                      await drizzleDb
+                        .update(schema.book)
+                        .set({ owned: newValue ? 1 : 0 })
+                        .where(eq(schema.book.id, b.book.id))
+                        .run();
+                    }}
+                  />
+                </View>
+                
+
+                {/* Button to update the book */}
+                <TouchableOpacity
+                  disabled={true}
+                  style={[myStyles.smallButton, { width: '30%' }]}
+                  onPress={() => router.push(`./updategenre?id=${b.book.id}`)}>
+                  <ThemedText 
+                    style={myStyles.smallButtonText}
+                    type="defaultSemiBold">
+                    Update
+                  </ThemedText>
+                </TouchableOpacity>
+
+                {/* Button to delete the book */}
+                <TouchableOpacity
+                  style={[myStyles.smallButton, { width: '30%' }]}
+                  onPress={async () => {
+                    try {
+                      await drizzleDb.delete(schema.book).where(eq(schema.book.id, b.book.id)).run();
+                      await getBooksWithDetails(); 
+                    } catch (error) {
+                      console.error('Error deleting book:', error);
+                      alert('Failed to delete book');
+                    }
+                  }}>
+                  <ThemedText 
+                    style={myStyles.smallButtonText}
+                    type="defaultSemiBold">
+                    Delete
+                  </ThemedText>
+                </TouchableOpacity>
+              </View>              
+              
+            </View>
+          ))
+        )}
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
+
+
     </ParallaxScrollView>
   );
 }
@@ -60,10 +183,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    padding: 16,
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
+    paddingHorizontal: 16,
   },
   reactLogo: {
     height: 178,
