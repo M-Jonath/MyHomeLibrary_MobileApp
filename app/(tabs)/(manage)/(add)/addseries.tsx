@@ -1,5 +1,5 @@
 //import { Image } from 'expo-image';
-import { StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '@/db/schema';
@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/ThemedView';
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Picker } from '@react-native-picker/picker';
+import CustomScrollView from '@/components/CustomScrollView';
 
 export default function AddSeriesScreen() {
     // Initialize SQLite database connection
@@ -71,11 +72,16 @@ export default function AddSeriesScreen() {
 
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
+      loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00ffcc" />
+        </View>
+      ) : (
+        //<SafeAreaView style={{ flex: 1 }}>
+          <CustomScrollView>
 
             {/* Title Section */}
-            <ThemedView className='py-2' style={styles.titleContainer}>
+            <ThemedView style={styles.titleContainer}>
                 <ThemedText type="title">Add a New Series</ThemedText>
             </ThemedView>
 
@@ -121,25 +127,18 @@ export default function AddSeriesScreen() {
 
                 {/* Button to submit the new sereis */}
                 <View style={{ alignItems: "center" }}>
-                  <TouchableOpacity style={[myStyles.button]} onPress={addSeries} >
+                  <TouchableOpacity style={[myStyles.button]} onPressIn={addSeries} >
                     <Text style={[myStyles.buttonText]}>
                       Add Series
                     </Text>
                   </TouchableOpacity>
                 </View>
 
-
-                {/* {authors.map((author) => (
-                                <Text style= {{ color: 'red'}}>
-                                {author.name} - {author.id}
-                                </Text>
-                            ))} */}
-
             </ThemedView>
             
-          </ScrollView>
-        </SafeAreaView>
-
+          </CustomScrollView>
+        //</SafeAreaView>
+      )
     );
 }
 
@@ -151,11 +150,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingTop: 100,
     paddingBottom: 20,
-  },
-  scrollContainer: {
-    paddingHorizontal: 16,
-    backgroundColor: 'darkred',
-    height: '100%',
   },
   formContainer: {
     gap: 10,

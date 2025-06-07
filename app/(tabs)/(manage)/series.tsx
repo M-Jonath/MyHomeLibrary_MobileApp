@@ -111,7 +111,7 @@ export default function ManageSeries() {
                   style={[myStyles.smallButton, { width: 50 }]}
                   onPressIn={() => router.push({
                     pathname: '/(tabs)/(manage)/update',
-                    params: { type: 'series', id: series.id }
+                    params: { type: 'Series', id: series.id }
                   })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}

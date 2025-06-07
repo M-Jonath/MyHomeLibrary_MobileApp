@@ -59,6 +59,7 @@ export default function HomeScreen() {
       
     } catch (error) {
       console.error('Error fetching books with details:', error);
+      alert(`Error fetching books with details: ${error}`)
     } finally {
       setLoading(false);
     }
@@ -76,14 +77,6 @@ export default function HomeScreen() {
       setLoading(false);
     }               
   }
-
-
-  // Fetch books on component mount
-  useEffect(() => {
-    getBooksWithDetails();
-    //const initialStates = Object.fromEntries(booksWithDetails.map(b => [b.book.id, b.book.owned === 1]));
-    //setOwnedStates(initialStates);
-  }, []);
 
 
 

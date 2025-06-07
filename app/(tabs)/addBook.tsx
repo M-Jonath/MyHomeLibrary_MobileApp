@@ -24,21 +24,24 @@ export default function AddBookScreen() {
 
     const router = useRouter();
 
+    //States For Book Data
     const [title, setTitle] = useState('');
     const [author, setAuthor] = useState<number | undefined>();
     const [series, setSeries] = useState<number | undefined>();
     const [genre, setGenre] = useState<number | undefined>();
     const [owned, setOwned] = useState(false);
 
+    //States for lists
     const [authors, setAuthors] = useState<schema.Author[]>([]);
     const [seriesList, setSeriesList] = useState<schema.Series[]>([]);
     const [genres, setGenres] = useState<schema.Genre[]>([]);
 
-    // State for creating new entries
+    // States for creating new entries
     const [ createAuthor, setCreateAuthor ] = useState(false);
     const [ createSeries, setCreateSeries ] = useState(false);
     const [ createGenre, setCreateGenre ] = useState(false);
 
+    // States for new Values
     const [newAuthorName, setNewAuthorName] = useState('');
     const [newSeriesName, setNewSeriesName] = useState('');
     const [newGenreName, setNewGenreName] = useState('');
@@ -466,10 +469,10 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   formContainer: {
-    gap: 10,
+    gap: 8,
     paddingTop: 10, // additional padding inside the safe area
     paddingBottom: 10,
-    paddingHorizontal: 25,
+    //paddingHorizontal: 25,
     //height: '100%',
     height: '100%',
     //backgroundColor: 'black',

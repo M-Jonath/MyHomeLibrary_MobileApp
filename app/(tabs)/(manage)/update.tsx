@@ -9,21 +9,22 @@ import { ThemedView } from '@/components/ThemedView';
 import React, { useCallback, useState } from 'react';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { eq } from 'drizzle-orm';
+import CustomScrollView from '@/components/CustomScrollView';
 
 export default function UpdateScreen() {
 
     const db = useSQLiteContext();
     const drizzleDb = drizzle(db, { schema });
     const router = useRouter();
-    const { type, id } = useLocalSearchParams<{ type: 'author' | 'series' | 'genre'; id: string }>();
+    const { type, id } = useLocalSearchParams<{ type: 'Author' | 'Series' | 'Genre'; id: string }>();
     const [loading, setLoading] = useState(false);
     const [name, setName] = useState('');
 
 
     const tableMap = {
-        author: schema.author,
-        genre: schema.genre,
-        series: schema.series,
+        Author: schema.author,
+        Genre: schema.genre,
+        Series: schema.series,
     };
 
 
@@ -39,7 +40,6 @@ export default function UpdateScreen() {
                     eq(tableMap[type].id, recordId)
                 );
             setName(results[0].name);
-            setLoading(false);
         } catch(error) {
             console.error(error);
             alert(`Could not load ${type} for updating`)
@@ -79,9 +79,9 @@ export default function UpdateScreen() {
         <ActivityIndicator size="large" color="#00ffcc" />
       </View>
     ) : (
-      <SafeAreaView style = {{ flex: 1 }}>
+      //<SafeAreaView style = {{ flex: 1 }}>
         
-        <ScrollView contentContainerStyle = {styles.scrollContainer}>
+        <CustomScrollView>
 
           {/* Title Section */}
           <ThemedView style = {styles.titleContainer}>
@@ -107,9 +107,9 @@ export default function UpdateScreen() {
 
           </View>
 
-        </ScrollView>
+        </CustomScrollView>
 
-      </SafeAreaView>
+      //</SafeAreaView>
     )
   );
 }

@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import CustomScrollView from '@/components/CustomScrollView';
 
 export default function AddAuthorScreen() {
     // Initialize SQLite database connection
@@ -44,9 +45,9 @@ export default function AddAuthorScreen() {
           <ActivityIndicator size="large" color="#00ffcc" />
         </View>
       ) : (
-        <SafeAreaView style={{ flex: 1 }}>
+        //<SafeAreaView style={{ flex: 1 }}>
 
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <CustomScrollView>
 
             {/* Title Section */}
             <ThemedView style={styles.titleContainer}>
@@ -76,8 +77,8 @@ export default function AddAuthorScreen() {
 
             </ThemedView>
             
-          </ScrollView>
-        </SafeAreaView>
+          </CustomScrollView>
+        //</SafeAreaView>
 
     ));
 }
@@ -91,18 +92,12 @@ const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: 20,
   },
-  scrollContainer: {
-    paddingHorizontal: 16,
-    backgroundColor: 'darkred',
-    height: '100%',
-  },
   formContainer: {
     gap: 10,
     paddingTop: 20, // additional padding inside the safe area
     paddingBottom: 20,
     paddingHorizontal: 25,
     height: '100%',
-    backgroundColor: 'black',
   },
   input: {
     borderWidth: 1,

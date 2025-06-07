@@ -129,7 +129,7 @@ export default function ManageGenres() {
                   style={[myStyles.smallButton, { width: 50 }]}
                   onPressIn={() => router.push({
                     pathname: '/(tabs)/(manage)/update',
-                    params: { type: 'genre', id: genre.id }
+                    params: { type: 'Genre', id: genre.id }
                   })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}

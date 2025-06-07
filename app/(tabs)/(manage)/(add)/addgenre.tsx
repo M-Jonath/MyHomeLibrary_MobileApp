@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useState } from 'react';
 import { useRouter } from 'expo-router';
+import CustomScrollView from '@/components/CustomScrollView';
 
 export default function AddAuthorScreen() {
     // Initialize SQLite database connection
@@ -44,7 +45,7 @@ export default function AddAuthorScreen() {
           <ActivityIndicator size="large" color="#00ffcc" />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <CustomScrollView>
 
         {/* Title Section */}
         <ThemedView style={styles.titleContainer}>
@@ -73,7 +74,7 @@ export default function AddAuthorScreen() {
           </View>
           
         </ThemedView>      
-      </ScrollView>
+      </CustomScrollView>
     ));
 }
 

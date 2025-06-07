@@ -117,7 +117,7 @@ export default function ManageAuthors() {
                   style={[myStyles.smallButton, { width: 50 }]}
                   onPressIn={() => router.push({
                     pathname: '/(tabs)/(manage)/update',
-                    params: { type: 'author', id: author.id }
+                    params: { type: 'Author', id: author.id }
                   })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}
