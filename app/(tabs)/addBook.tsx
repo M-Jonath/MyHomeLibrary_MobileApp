@@ -45,72 +45,68 @@ export default function AddBookScreen() {
 
     // Fuction to get authors list
     const getAuthors = async () => {
-        setLoading(true);
-        try {
-          const fetchedAuthors = await drizzleDb.select().from(schema.author);
-          await new Promise(resolve => setTimeout(resolve, 500));
-          setAuthors(fetchedAuthors);
-        } catch (error) {
-          console.error('Error fetching books:', error);
-        } finally {
-          setLoading(false);
-        }
+      setLoading(true);
+      try {
+        const fetchedAuthors = await drizzleDb.select().from(schema.author);
+        setAuthors(fetchedAuthors);
+      } catch (error) {
+        console.error('Error fetching books:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     // Function to get series list
-      const getSeriesList = async () => {
-          setLoading(true);
-          try {
-            const fetchedSeries = await drizzleDb.select().from(schema.series);
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setSeriesList(fetchedSeries);
-          } catch (error) {
-            console.error('Error fetching series:', error);
-          } finally {
-            setLoading(false);
-          }
-        };
+    const getSeriesList = async () => {
+      setLoading(true);
+      try {
+        const fetchedSeries = await drizzleDb.select().from(schema.series);
+        setSeriesList(fetchedSeries);
+      } catch (error) {
+        console.error('Error fetching series:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     // Function to get genres list
     const getGenres = async () => {
-          setLoading(true);
-          try {
-            const fetchedGenres = await drizzleDb.select().from(schema.genre);
-            await new Promise(resolve => setTimeout(resolve,500))
-            setGenres(fetchedGenres);
-          } catch (error) {
-            console.error('Error fetching genres:', error);
-          }
-        };
+      setLoading(true);
+      try {
+        const fetchedGenres = await drizzleDb.select().from(schema.genre);
+        setGenres(fetchedGenres);
+      } catch (error) {
+        console.error('Error fetching genres:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     // Function to toggle author creation mode
     const toggleCreateAuthor = () => {
-        setCreateAuthor(!createAuthor);
-
-        if (createAuthor) {
-            // Reset the new author name when exiting creation mode
-            setNewAuthorName('');
-        }
+      setCreateAuthor(!createAuthor);
+      if (createAuthor) {
+        // Reset the new author name when exiting creation mode
+        setNewAuthorName('');
+      }
     };
 
     // Function to toggle series creation mode
     const toggleCreateSeries = () => {
-        setCreateSeries(!createSeries);
-
-        if (createSeries) {
-            // Reset the new series name when exiting creation mode
-            setNewSeriesName('');
-        }
+      setCreateSeries(!createSeries);
+      if (createSeries) {
+        // Reset the new series name when exiting creation mode
+        setNewSeriesName('');
+      }
     };
 
     // Function to toggle genre creation mode
     const toggleCreateGenre = () => {
-        setCreateGenre(!createGenre);
-
-        if (createGenre) {
-            // Reset the new genre name when exiting creation mode
-            setNewGenreName('');
-        }
+      setCreateGenre(!createGenre);
+      if (createGenre) {
+        // Reset the new genre name when exiting creation mode
+        setNewGenreName('');
+      }
     };
     
     // Fetch authors, series, and genres when the component mounts
@@ -128,14 +124,13 @@ export default function AddBookScreen() {
 
 
     const addBook = async () => {
-        let authorID = author;
-        let seriesID = series;
-        let genreID = genre;
-        setLoading(true)
-
-        try{
-          // If a new author is being created, insert it into the database
-          if (createAuthor && newAuthorName.trim() !== '') {
+      let authorID = author;
+      let seriesID = series;
+      let genreID = genre;
+      setLoading(true)
+      try{
+      // If a new author is being created, insert it into the database
+      if (createAuthor && newAuthorName.trim() !== '') {
             console.log('Create New Author Detected:', newAuthorName);
             const newAuthorData: schema.NewAuthor = {
               name: newAuthorName.trim(),

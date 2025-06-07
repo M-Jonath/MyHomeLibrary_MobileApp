@@ -1,5 +1,5 @@
 //import { Image } from 'expo-image';
-import { StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '@/db/schema';
@@ -14,6 +14,7 @@ export default function AddAuthorScreen() {
     // Initialize SQLite database connection
     const db = useSQLiteContext();
     const drizzleDb = drizzle(db, { schema });
+    const [loading, setLoading] = useState(false);
 
     // Router for navigation
     const router = useRouter();
@@ -22,25 +23,33 @@ export default function AddAuthorScreen() {
     const [author, setAuthor] = useState('');
 
     // Function to add a new author to the database
-    const addAuthor = () => {
-        try {
-              drizzleDb.insert(schema.author).values({name: author}).run();
-              setAuthor('');
-              router.back();
-
-            } catch (error) {
-              console.error(error);
-              alert('Failed to add Author');
-            }
+    const addAuthor = async() => {
+      setLoading(true);
+      try {
+        await drizzleDb.insert(schema.author).values({name: author});
+        setAuthor('');
+        router.back();
+      } catch (error) {
+        console.error(error);
+        alert('Failed to add Author');
+      } finally {
+        setLoading(false);
+      }
     }
 
 
     return (
+      loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00ffcc" />
+        </View>
+      ) : (
         <SafeAreaView style={{ flex: 1 }}>
+
           <ScrollView contentContainerStyle={styles.scrollContainer}>
 
             {/* Title Section */}
-            <ThemedView className='py-2' style={styles.titleContainer}>
+            <ThemedView style={styles.titleContainer}>
                 <ThemedText type="title">Add a New Author</ThemedText>
             </ThemedView>
 
@@ -58,7 +67,7 @@ export default function AddAuthorScreen() {
 
                 {/* Button to submit the new author */}
                 <View style={{ alignItems: "center" }}>
-                  <TouchableOpacity style={[myStyles.button]} onPress={addAuthor} >
+                  <TouchableOpacity style={[myStyles.button]} onPressIn={addAuthor} >
                     <Text style={[myStyles.buttonText]}>
                       Add Book
                     </Text>
@@ -70,7 +79,7 @@ export default function AddAuthorScreen() {
           </ScrollView>
         </SafeAreaView>
 
-    );
+    ));
 }
 
 const styles = StyleSheet.create({

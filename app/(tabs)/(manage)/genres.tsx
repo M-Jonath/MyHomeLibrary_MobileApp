@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { myStyles } from '@/constants/stylesheet';
@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 import * as schema from '@/db/schema';
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { eq } from 'drizzle-orm';
+import { eq, SQLWrapper } from 'drizzle-orm';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomScrollView from '@/components/CustomScrollView';
 
@@ -38,6 +38,18 @@ export default function ManageGenres() {
     }
   };
   
+  const deleteRecord = async (id: number) => {
+    setLoading(true);
+    try {
+      await drizzleDb.delete(schema.genre).where(eq(schema.genre.id, id));
+      await getGenres(); 
+    } catch (error) {
+      console.error('Error deleting genre:', error);
+      alert('Failed to delete genre');
+    } finally {
+      setLoading(false);
+    }
+  }
   
     // Fetch genres when the component is focused
     useFocusEffect(
@@ -49,8 +61,11 @@ export default function ManageGenres() {
 
 
   return (
-    //<SafeAreaView>
-      //<ScrollView style={{ paddingHorizontal: 16, height: '100%' }}>
+    loading ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#00ffcc" />
+      </View>
+    ) : (
       <CustomScrollView>
         <View style={{ height: 80 }} />
 
@@ -68,12 +83,8 @@ export default function ManageGenres() {
         <View style={{ justifyContent: 'center', alignItems: 'center', marginVertical: 16 }}>
           <TouchableOpacity
             style={myStyles.button}
-            onPress={() => {
-              try {
-                router.push('./(tabs)/(manage)/(add)/addgenre');
-              } catch (error) {
-                console.error('Error navigating to addgenre:', error);
-              }
+            onPressIn={() => {
+                router.push('/(tabs)/(manage)/(add)/addgenre');
             }}
           >
             <ThemedText 
@@ -86,7 +97,7 @@ export default function ManageGenres() {
         
 
         {/* Displaying the list of genres */}
-        <ThemedView style={{ padding: 16, backgroundColor: '#ffffff', borderRadius: 8 }}>
+        <ThemedView style={{ padding: 16, borderRadius: 8 }}>
           {genres.length === 0 ? (
           <ThemedText
           style={{ flexDirection: 'row', borderRadius: 10, marginVertical:5, padding: 8, backgroundColor: '#151515' }}
@@ -97,12 +108,12 @@ export default function ManageGenres() {
               key={genre.id} 
               style={{ 
                 flexDirection: 'row', 
-                alignItems: 'center',
-                justifyContent: 'space-between', 
-                borderRadius: 5, 
+                //alignItems: 'center',
+                //justifyContent: 'space-between', 
+                borderRadius: 10, 
                 marginVertical:5, 
                 padding: 8, 
-                backgroundColor: '#202020' }}>
+                backgroundColor: '#252525' }}>
               
               {/* Displaying the genre name */}
                 <ThemedText
@@ -116,7 +127,10 @@ export default function ManageGenres() {
                 {/* Button to update the record */}
                 <TouchableOpacity
                   style={[myStyles.smallButton, { width: 50 }]}
-                  onPress={() => router.push(`./(update)/updategenre?id=${genre.id}`)}>
+                  onPressIn={() => router.push({
+                    pathname: '/(tabs)/(manage)/update',
+                    params: { type: 'genre', id: genre.id }
+                  })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}
                     type="defaultSemiBold">
@@ -127,18 +141,10 @@ export default function ManageGenres() {
                 {/* Button to delete the record */}
                 <TouchableOpacity
                   style={[myStyles.smallButton, { width: 50 }]}
-                  onPress={async () => {
-                    setLoading(true);
-                    try {
-                      await drizzleDb.delete(schema.genre).where(eq(schema.genre.id, genre.id));
-                      await getGenres(); 
-                    } catch (error) {
-                      console.error('Error deleting genre:', error);
-                      alert('Failed to delete genre');
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}>
+                  onPressIn={
+                    async () => deleteRecord(genre.id)
+                  }
+                >
                   <ThemedText 
                     style={myStyles.smallButtonText}
                     type="defaultSemiBold">
@@ -153,9 +159,7 @@ export default function ManageGenres() {
         </ThemedView>
 
       </CustomScrollView>
-      //</ScrollView>
-    //</SafeAreaView>
-  );
+  ));
 }
 
 const styles = StyleSheet.create({

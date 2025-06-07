@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { Collapsible } from '@/components/Collapsible';
 import { ExternalLink } from '@/components/ExternalLink';
@@ -21,6 +21,7 @@ export default function SearchScreen() {
 
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
+  const [loading, setLoading] = useState(false);
 
   const router = useRouter();
 
@@ -29,36 +30,36 @@ export default function SearchScreen() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const getSearchResults = async () => {
-      try {
-        const results = await drizzleDb
-          .select()
-          .from(schema.book)
-          .leftJoin(schema.author, eq(schema.book.author_id, schema.author.id))
-          .leftJoin(schema.series, eq(schema.book.series_id, schema.series.id))
-          .leftJoin(schema.genre, eq(schema.book.author_id, schema.genre.id))
-          .where(or(
-            sql`${schema.book.title} LIKE ${`%${searchText}%`}`,
-            sql`${schema.author.name} LIKE ${`%${searchText}%`}`,
-            sql`${schema.series.name} LIKE ${`%${searchText}%`}`,
-            sql`${schema.genre.name} LIKE ${`%${searchText}%`}`
-          ))
-          .all();
-  
-        // The structure of `results` will look like:
-        // [{ book: {...}, author: {...}, series: {...}, genre: {...} }]
-        
-        setSearchResults(
-          results.map(({ book, author, series, genre }) => ({
-            book,
-            author: author ?? undefined,
-            series: series ?? undefined,
-            genre: genre ?? undefined,
-          }))
-        );
-      } catch (error) {
-        console.error('Error searching:', error);
-      }
-    };
+    setLoading(true);
+    try {
+      const results = await drizzleDb
+        .select()
+        .from(schema.book)
+        .leftJoin(schema.author, eq(schema.book.author_id, schema.author.id))
+        .leftJoin(schema.series, eq(schema.book.series_id, schema.series.id))
+        .leftJoin(schema.genre, eq(schema.book.author_id, schema.genre.id))
+        .where(or(
+          sql`${schema.book.title} LIKE ${`%${searchText}%`}`,
+          sql`${schema.author.name} LIKE ${`%${searchText}%`}`,
+          sql`${schema.series.name} LIKE ${`%${searchText}%`}`,
+          sql`${schema.genre.name} LIKE ${`%${searchText}%`}`
+        ));  
+      // The structure of `results` will look like:
+      // [{ book: {...}, author: {...}, series: {...}, genre: {...} }]
+      setSearchResults(
+        results.map(({ book, author, series, genre }) => ({
+          book,
+          author: author ?? undefined,
+          series: series ?? undefined,
+          genre: genre ?? undefined,
+        }))
+      );
+    } catch (error) {
+      console.error('Error searching:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
 
   useFocusEffect(
@@ -141,6 +142,11 @@ export default function SearchScreen() {
       {!hasSearched ? (
       <ThemedText>Search by title, author, series or genre</ThemedText>
       ) : (
+        loading ? (
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#00ffcc" />
+          </View>
+        ) : (
         <ThemedView style={{ padding: 16 }}>
           {/* If no books are found, display a message */}
           {searchResults.length === 0 ? (
@@ -203,7 +209,8 @@ export default function SearchScreen() {
             ))
           )}
         </ThemedView>
-        )}
+        ))
+      }
 
 
 

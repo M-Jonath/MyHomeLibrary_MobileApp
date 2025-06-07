@@ -48,7 +48,7 @@ export default function TabLayout() {
             }),
           }}>
             <Tabs.Screen
-              name="index"
+              name="(books)"
               options={{
                 title: 'Home',
                 tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
@@ -64,7 +64,7 @@ export default function TabLayout() {
             <Tabs.Screen
               name="(manage)"
               options={{
-                title: 'Manage',
+                title: 'Manage Me',
                 tabBarIcon: ({ color }) => <IconSymbol size={28} name="1.magnifyingglass" color={color} />,
               }}
             />

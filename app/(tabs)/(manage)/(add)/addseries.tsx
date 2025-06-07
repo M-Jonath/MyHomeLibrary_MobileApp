@@ -15,6 +15,7 @@ export default function AddSeriesScreen() {
     // Initialize SQLite database connection
     const db = useSQLiteContext();
     const drizzleDb = drizzle(db, { schema });
+    const [loading, setLoading] = useState(false)
 
     // Router for navigation
     const router = useRouter();
@@ -28,30 +29,36 @@ export default function AddSeriesScreen() {
 
       // Function to fetch authors from the database
       const getAuthors = async () => {
-          try {
-            const fetchedAuthors = await drizzleDb.select().from(schema.author).all();
-            setAuthors(fetchedAuthors);
-          } catch (error) {
-            console.error('Error fetching books:', error);
-          }
-        };
+        setLoading(true);
+        try {
+          const fetchedAuthors = await drizzleDb.select().from(schema.author).all();
+          setAuthors(fetchedAuthors);
+        } catch (error) {
+          console.error('Error fetching books:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
       
 
     // Function to add a new series to the database
-    const addSeries = () => {
-        const seriesData: schema.NewSeries = {
-            name: name,
-            author_id: author,
-        };
-        try {
-                drizzleDb.insert(schema.series).values(seriesData).run();
-                        setName('');
-                        setAuthor(undefined);
-                        router.back();
-                    } catch (error) {
-                      console.error(error);
-                      alert('Failed to add series');
-                    }
+    const addSeries = async () => {
+      setLoading(true);
+      const seriesData: schema.NewSeries = {
+        name: name,
+        author_id: author,
+      };
+      try {
+        await drizzleDb.insert(schema.series).values(seriesData);
+          setName('');
+          setAuthor(undefined);
+        router.back();
+      } catch (error) {
+        console.error(error);
+        alert('Failed to add series');
+      } finally {
+        setLoading(false);
+      }
     }
 
 

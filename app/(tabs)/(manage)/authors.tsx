@@ -1,4 +1,5 @@
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { myStyles } from '@/constants/stylesheet';
@@ -56,9 +57,9 @@ export default function ManageAuthors() {
         <ActivityIndicator size="large" color="#00ffcc" />
       </View>
     )  :  (
-      //<ScrollView style={{ paddingHorizontal: 16 }}>
       <CustomScrollView>
         <View style={{ height: 80 }} />
+
         {/* Title Section */}
         <ThemedView style={styles.titleContainer}>
           <ThemedText 
@@ -73,7 +74,7 @@ export default function ManageAuthors() {
         <View style={{ justifyContent: 'center', alignItems: 'center', marginVertical: 16 }}>
           <TouchableOpacity
             style={myStyles.button}
-            onPress={() => {
+            onPressIn={() => {
               console.log('Pressed add Author');
               router.push('./(add)/addauthor');
             }}
@@ -95,7 +96,12 @@ export default function ManageAuthors() {
           >No Authors found</ThemedText>
           ) : (
           authors.map((author) => (
-            <View key={author.id} style={{ flexDirection: 'row', borderRadius: 10, marginVertical:5, padding: 8, backgroundColor: '#252525' }}>
+            <View key={author.id} style={{ 
+              flexDirection: 'row',
+              borderRadius: 10, 
+              marginVertical:5, 
+              padding: 8, 
+              backgroundColor: '#252525' }}>
               
               { /* Display Author Name */ }
               <ThemedText
@@ -108,9 +114,11 @@ export default function ManageAuthors() {
 
                 {/* Button to update record */}
                 <TouchableOpacity
-                  disabled={true}
                   style={[myStyles.smallButton, { width: 50 }]}
-                  onPress={() => router.push(`./updategenre?id=${author.id}`)}>
+                  onPressIn={() => router.push({
+                    pathname: '/(tabs)/(manage)/update',
+                    params: { type: 'author', id: author.id }
+                  })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}
                     type="defaultSemiBold">
@@ -121,7 +129,7 @@ export default function ManageAuthors() {
                 {/* Button to delete record */}
                 <TouchableOpacity
                   style={[myStyles.smallButton, { width: 50 }]}
-                  onPress={async () => {
+                  onPressIn={async () => {
                     setLoading(true);
                     try {
                       await drizzleDb.delete(schema.author).where(eq(schema.author.id, author.id));
@@ -148,7 +156,6 @@ export default function ManageAuthors() {
         </ThemedView>
 
       </CustomScrollView>
-      //</ScrollView>
   ));
 }
 

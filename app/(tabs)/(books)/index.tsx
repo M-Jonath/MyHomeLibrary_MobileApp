@@ -36,8 +36,8 @@ export default function HomeScreen() {
         .leftJoin(schema.series, eq(schema.book.series_id, schema.series.id))
         .leftJoin(schema.genre, eq(schema.book.author_id, schema.genre.id));
 
-      // 👇 Artificial delay (3 seconds)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Artificial delay
+      //await new Promise(resolve => setTimeout(resolve, 500));
 
       // The structure of `results` will look like:
       // [{ book: {...}, author: {...}, series: {...}, genre: {...} }]
@@ -63,6 +63,19 @@ export default function HomeScreen() {
       setLoading(false);
     }
   };
+
+  const deleteBook = async (id: number) => {
+    setLoading(true);
+    try {
+      await drizzleDb.delete(schema.book).where(eq(schema.book.id, id));
+      await getBooksWithDetails(); 
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      alert('Failed to delete book');
+    } finally {
+      setLoading(false);
+    }               
+  }
 
 
   // Fetch books on component mount
@@ -145,32 +158,34 @@ export default function HomeScreen() {
                   <ThemedText style={{ fontSize:12, color: 'white' }}>Owned:</ThemedText>
                   <Switch
                     value={ownedStates[b.book.id] ?? false}
-                    // onValueChange={
-                    //   async (newValue) => {
-                    //     setLoading(true)
-                    //     try{
-                    //       setOwnedStates(prev => ({ ...prev, [b.book.id]: newValue }));
-                    //       await drizzleDb
-                    //         .update(schema.book)
-                    //         .set({ owned: newValue ? 1 : 0 })
-                    //         .where(eq(schema.book.id, b.book.id));
-                    //     } catch(error) {
-                    //       console.error('Error updating book owned status:', error);
-                    //       alert('Failed to update owned status');
-                    //     } finally {
-                    //       setLoading(false)
-                    //     }
-                    //   }
-                    // }
+                    onValueChange={
+                      async (newValue) => {
+                        setLoading(true)
+                        try{
+                          setOwnedStates(prev => ({ ...prev, [b.book.id]: newValue }));
+                          await drizzleDb
+                            .update(schema.book)
+                            .set({ owned: newValue ? 1 : 0 })
+                            .where(eq(schema.book.id, b.book.id));
+                        } catch(error) {
+                          console.error('Error updating book owned status:', error);
+                          alert('Failed to update owned status');
+                        } finally {
+                          setLoading(false)
+                        }
+                      }
+                    }
                   />
                 </View>
                 
 
                 {/* Button to update the book */}
                 <TouchableOpacity
-                  disabled={true}
                   style={[myStyles.smallButton, { width: '30%' }]}
-                  onPress={() => router.push(`./updategenre?id=${b.book.id}`)}>
+                  onPress={() => router.push({
+                    pathname: '/(tabs)/(books)/updatebook',
+                    params: { id: b.book.id }
+                  })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}
                     type="defaultSemiBold">
@@ -181,18 +196,7 @@ export default function HomeScreen() {
                 {/* Button to delete the book */}
                 <TouchableOpacity
                   style={[myStyles.smallButton, { width: '30%' }]}
-                  onPress={async () => {
-                    setLoading(true);
-                    try {
-                      await drizzleDb.delete(schema.book).where(eq(schema.book.id, b.book.id));
-                      await getBooksWithDetails(); 
-                    } catch (error) {
-                      console.error('Error deleting book:', error);
-                      alert('Failed to delete book');
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}>
+                  onPress={() => deleteBook(b.book.id)}>
                   <ThemedText 
                     style={myStyles.smallButtonText}
                     type="defaultSemiBold">

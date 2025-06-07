@@ -73,12 +73,9 @@ export default function ManageSeries() {
         <View style={{ justifyContent: 'center', alignItems: 'center', marginVertical: 16 }}>
           <TouchableOpacity
             style={myStyles.button}
-            onPress={() => {
-              try {
-                router.push('./(tabs)/(manage)/(add)/addseries');
-              } catch (error) {
-                console.error('Error navigating to addseries:', error);
-              }
+            onPressIn={() => {
+                router.push('/(tabs)/(manage)/(add)/addseries');
+
             }}
           >
             <ThemedText 
@@ -111,9 +108,11 @@ export default function ManageSeries() {
 
                 {/* Button to update the series */}
                 <TouchableOpacity
-                  disabled={true}
                   style={[myStyles.smallButton, { width: 50 }]}
-                  onPress={() => router.push(`./updategenre?id=${series.id}`)}>
+                  onPressIn={() => router.push({
+                    pathname: '/(tabs)/(manage)/update',
+                    params: { type: 'series', id: series.id }
+                  })}>
                   <ThemedText 
                     style={myStyles.smallButtonText}
                     type="defaultSemiBold">
@@ -124,7 +123,7 @@ export default function ManageSeries() {
                 {/* Button to delete the series */}
                 <TouchableOpacity
                 style={[myStyles.smallButton, { width: 50 }]}
-                onPress={async () => {
+                onPressIn={async () => {
                   setLoading(true);
                   try {
                     await drizzleDb.delete(schema.series).where(eq(schema.series.id, series.id));

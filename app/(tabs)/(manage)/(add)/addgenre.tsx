@@ -1,5 +1,5 @@
 //import { Image } from 'expo-image';
-import { StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '@/db/schema';
@@ -14,6 +14,7 @@ export default function AddAuthorScreen() {
     // Initialize SQLite database connection
     const db = useSQLiteContext();
     const drizzleDb = drizzle(db, { schema });
+    const [loading, setLoading] = useState(false);
 
     // Router for navigation
     const router = useRouter();
@@ -22,55 +23,58 @@ export default function AddAuthorScreen() {
     const [genre, setGenre] = useState('');
 
     // Function to add a new author to the database
-    const addGenre = () => {
-        try {
-              drizzleDb.insert(schema.genre).values({name: genre}).run();
-              setGenre('');
-              router.back();
-
-            } catch (error) {
-              console.error(error);
-              alert('Failed to add Genre');
-            }
+    const addGenre = async () => {
+      setLoading(true);
+      try {
+        await drizzleDb.insert(schema.genre).values({name: genre});
+        setGenre('');
+        router.back();
+      } catch (error) {
+        console.error(error);
+        alert('Failed to add Genre');
+      } finally {
+        setLoading(false);
+      }
     }
 
 
     return (
-        //<SafeAreaView style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={styles.scrollContainer}>
+      loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00ffcc" />
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
 
-            {/* Title Section */}
-            <ThemedView className='py-2' style={styles.titleContainer}>
-                <ThemedText type="title">Add a New Genre</ThemedText>
-            </ThemedView>
+        {/* Title Section */}
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="title">Add a New Genre</ThemedText>
+        </ThemedView>
 
-            {/* Form to add a new author */}
-            <ThemedView style={styles.formContainer}>
+        {/* Form to add a new author */}
+        <ThemedView style={styles.formContainer}>
 
-                {/* Input field for the author's name */}
-                <TextInput
-                placeholder="Enter Genre Name"
-                placeholderTextColor="#ccc"
-                value={genre}
-                onChangeText={setGenre}
-                style={[styles.input]}
-                />
+          {/* Input field for the author's name */}
+          <TextInput
+            placeholder="Enter Genre Name"
+            placeholderTextColor="#ccc"
+            value={genre}
+            onChangeText={setGenre}
+            style={[styles.input]}
+          />
 
-                {/* Button to submit the new author */}
-                <View style={{ alignItems: "center" }}>
-                  <TouchableOpacity style={[myStyles.button]} onPress={addGenre} >
-                    <Text style={[myStyles.buttonText]}>
-                      Add Genre
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-            </ThemedView>
-            
-          </ScrollView>
-        //</SafeAreaView>
-
-    );
+          {/* Button to submit the new author */}
+          <View style={{ alignItems: "center" }}>
+            <TouchableOpacity style={[myStyles.button]} onPressIn={addGenre} >
+              <Text style={[myStyles.buttonText]}>
+                Add Genre
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+        </ThemedView>      
+      </ScrollView>
+    ));
 }
 
 const styles = StyleSheet.create({
