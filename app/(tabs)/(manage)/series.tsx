@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { myStyles } from '@/constants/stylesheet';
@@ -9,6 +9,7 @@ import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { eq } from 'drizzle-orm';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomScrollView from '@/components/CustomScrollView';
 
 
 
@@ -16,6 +17,7 @@ export default function ManageSeries() {
   // Initialize the SQLite database and Drizzle ORM
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
+  const [loading, setLoading] = useState(false);
 
   // Router for navigation
   const router = useRouter();
@@ -25,13 +27,16 @@ export default function ManageSeries() {
 
   // Function to fetch series from the database
   const getSeries = async () => {
-      try {
-        const fetchedSeries = await drizzleDb.select().from(schema.series).all();
-        setSeries(fetchedSeries);
-      } catch (error) {
-        console.error('Error fetching series:', error);
-      }
-    };
+    setLoading(true);
+    try {
+      const fetchedSeries = await drizzleDb.select().from(schema.series);
+      setSeries(fetchedSeries);
+    } catch (error) {
+      console.error('Error fetching series:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   
     // Fetch authors when the component is focused
@@ -44,8 +49,15 @@ export default function ManageSeries() {
 
 
   return (
-    <SafeAreaView>
-      <ScrollView style={{ paddingHorizontal: 16 }}>
+    loading ? (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#00ffcc" />
+      </View>
+    ) : (
+    //<SafeAreaView>
+      //<ScrollView style={{ paddingHorizontal: 16 }}>
+      <CustomScrollView>
+        <View style={{ height: 80 }} />
 
         {/* Title Section */}
         <ThemedView style={styles.titleContainer}>
@@ -63,7 +75,7 @@ export default function ManageSeries() {
             style={myStyles.button}
             onPress={() => {
               try {
-                router.push('/(tabs)/(manage)/addseries');
+                router.push('./(tabs)/(manage)/(add)/addseries');
               } catch (error) {
                 console.error('Error navigating to addseries:', error);
               }
@@ -82,7 +94,7 @@ export default function ManageSeries() {
         <ThemedView style={{ padding: 16, backgroundColor: 'black', borderRadius: 8 }}>
           {series.length === 0 ? (
           <ThemedText
-          style={{ flexDirection: 'row', borderRadius: 5, marginVertical:5, padding: 8, backgroundColor: '#202020' }}
+          style={{ flexDirection: 'row', borderRadius: 5, marginVertical:5, padding: 8, backgroundColor: '#151515', color:'white' }}
           >No Series found</ThemedText>
           ) : (
           series.map((series) => (
@@ -113,12 +125,15 @@ export default function ManageSeries() {
                 <TouchableOpacity
                 style={[myStyles.smallButton, { width: 50 }]}
                 onPress={async () => {
+                  setLoading(true);
                   try {
-                    await drizzleDb.delete(schema.series).where(eq(schema.series.id, series.id)).run();
+                    await drizzleDb.delete(schema.series).where(eq(schema.series.id, series.id));
                     await getSeries(); 
                   } catch (error) {
                     console.error('Error deleting series:', error);
                     alert('Failed to delete series');
+                  } finally {
+                    setLoading(false);
                   }
                 }}>
                 <ThemedText 
@@ -133,10 +148,11 @@ export default function ManageSeries() {
           ))
         )}
         </ThemedView>
-
-      </ScrollView>
-    </SafeAreaView>
-  );
+      
+      </CustomScrollView>
+      //</ScrollView>
+    //</SafeAreaView>
+  ));
 }
 
 const styles = StyleSheet.create({

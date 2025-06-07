@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import * as schema from '@/db/schema';
@@ -16,6 +16,8 @@ export default function HomeScreen() {
   // Initialize SQLite database connection
   const db = useSQLiteContext();
   const drizzleDb = drizzle(db, { schema });
+  const [loading, setLoading] = useState(false);
+
 
   // State to hold books with details
   const [booksWithDetails, setBooksWithDetails] = useState<schema.BookWithDetails[]>([]);
@@ -25,17 +27,21 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const getBooksWithDetails = async () => {
+    setLoading(true);
     try {
       const results = await drizzleDb
         .select()
         .from(schema.book)
         .leftJoin(schema.author, eq(schema.book.author_id, schema.author.id))
         .leftJoin(schema.series, eq(schema.book.series_id, schema.series.id))
-        .leftJoin(schema.genre, eq(schema.book.author_id, schema.genre.id))
-        .all();
+        .leftJoin(schema.genre, eq(schema.book.author_id, schema.genre.id));
+
+      // 👇 Artificial delay (3 seconds)
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // The structure of `results` will look like:
       // [{ book: {...}, author: {...}, series: {...}, genre: {...} }]
+      console.log(results)
       
       setBooksWithDetails(
         results.map(({ book, author, series, genre }) => ({
@@ -45,8 +51,16 @@ export default function HomeScreen() {
           genre: genre ?? undefined,
         }))
       );
+      
+      const OwnedMap = Object.fromEntries (
+        results.map(({book}) => ([book.id, book.owned===1]))
+      ) as Record<number,boolean>;
+      setOwnedStates(OwnedMap);
+      
     } catch (error) {
       console.error('Error fetching books with details:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -64,12 +78,19 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       getBooksWithDetails();
-    //  const initialStates = Object.fromEntries(booksWithDetails.map(b => [b.book.id, b.book.owned === 1]));
-    //  setOwnedStates(initialStates);
+      //const initialStates = Object.fromEntries(booksWithDetails.map(b => [b.book.id, b.book.owned === 1]));
+      //setOwnedStates(initialStates);
     }, [])
   );
 
   return (
+    loading? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00ffcc" />
+        </View>
+    ) : (
+
+
     // Render the ParallaxScrollView with a header image and book list
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -124,14 +145,23 @@ export default function HomeScreen() {
                   <ThemedText style={{ fontSize:12, color: 'white' }}>Owned:</ThemedText>
                   <Switch
                     value={ownedStates[b.book.id] ?? false}
-                    onValueChange={async (newValue) => {
-                      setOwnedStates(prev => ({ ...prev, [b.book.id]: newValue }));
-                      await drizzleDb
-                        .update(schema.book)
-                        .set({ owned: newValue ? 1 : 0 })
-                        .where(eq(schema.book.id, b.book.id))
-                        .run();
-                    }}
+                    // onValueChange={
+                    //   async (newValue) => {
+                    //     setLoading(true)
+                    //     try{
+                    //       setOwnedStates(prev => ({ ...prev, [b.book.id]: newValue }));
+                    //       await drizzleDb
+                    //         .update(schema.book)
+                    //         .set({ owned: newValue ? 1 : 0 })
+                    //         .where(eq(schema.book.id, b.book.id));
+                    //     } catch(error) {
+                    //       console.error('Error updating book owned status:', error);
+                    //       alert('Failed to update owned status');
+                    //     } finally {
+                    //       setLoading(false)
+                    //     }
+                    //   }
+                    // }
                   />
                 </View>
                 
@@ -152,12 +182,15 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   style={[myStyles.smallButton, { width: '30%' }]}
                   onPress={async () => {
+                    setLoading(true);
                     try {
-                      await drizzleDb.delete(schema.book).where(eq(schema.book.id, b.book.id)).run();
+                      await drizzleDb.delete(schema.book).where(eq(schema.book.id, b.book.id));
                       await getBooksWithDetails(); 
                     } catch (error) {
                       console.error('Error deleting book:', error);
                       alert('Failed to delete book');
+                    } finally {
+                      setLoading(false);
                     }
                   }}>
                   <ThemedText 
@@ -175,7 +208,7 @@ export default function HomeScreen() {
 
 
     </ParallaxScrollView>
-  );
+  ));
 }
 
 const styles = StyleSheet.create({

@@ -3,12 +3,12 @@ import { StyleSheet } from 'react-native';
 export const myStyles = StyleSheet.create({
   button: {
     backgroundColor: '#4F46E5', // Indigo-600
-    paddingVertical: 12,
+    paddingVertical:8,
     paddingHorizontal: 24,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
+    margin: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,

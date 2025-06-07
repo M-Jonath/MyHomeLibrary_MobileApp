@@ -10,6 +10,7 @@ import { useRouter } from 'expo-router';
 
 export default function ManageIndexScreen() {
   const router = useRouter();
+  
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -34,7 +35,8 @@ export default function ManageIndexScreen() {
         <TouchableOpacity
           style={myStyles.button}
           onPress={() => {
-        router.push('/(tabs)/(manage)/authors');
+            console.log('Clicked on Manage Authors');
+            router.push('/(tabs)/(manage)/authors');
           }}>
           <ThemedText 
         style={myStyles.buttonText}
@@ -45,7 +47,8 @@ export default function ManageIndexScreen() {
         <TouchableOpacity
           style={myStyles.button}
           onPress={() => {
-        router.push('/(tabs)/(manage)/series');
+            console.log('Clicked on Manage Series');
+            router.push('/(tabs)/(manage)/series');
           }}>
           <ThemedText
         style={myStyles.buttonText}
@@ -56,7 +59,8 @@ export default function ManageIndexScreen() {
         <TouchableOpacity
           style={myStyles.button}
           onPress={() => {
-        router.push('/(tabs)/(manage)/genres');
+            console.log('Clicked on Manage Genre');
+            router.push('/(tabs)/(manage)/genres');
           }}>
           <ThemedText
         style={myStyles.buttonText}
@@ -67,6 +71,7 @@ export default function ManageIndexScreen() {
         <TouchableOpacity
           style={myStyles.button}
           onPress={() => {
+            console.log('Clicked on Manage Database');
             router.push('./database');
           }}>
           <ThemedText

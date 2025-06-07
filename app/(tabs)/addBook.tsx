@@ -1,5 +1,5 @@
 //import { Image } from 'expo-image';
-import { Button, Platform, StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { Button, Platform, StyleSheet, Switch, TextInput, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useSQLiteContext } from 'expo-sqlite';
 import { drizzle } from 'drizzle-orm/expo-sqlite';
@@ -14,11 +14,13 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import React, { useCallback, useState } from 'react';
 import { useFocusEffect, useRouter } from 'expo-router';
+import CustomScrollView from '@/components/CustomScrollView';
 
 export default function AddBookScreen() {
     // Initialize SQLite database connection
     const db = useSQLiteContext();
     const drizzleDb = drizzle(db, { schema });
+    const [loading, setLoading] = useState(false);
 
     const router = useRouter();
 
@@ -43,28 +45,38 @@ export default function AddBookScreen() {
 
     // Fuction to get authors list
     const getAuthors = async () => {
+        setLoading(true);
         try {
-          const fetchedAuthors = await drizzleDb.select().from(schema.author).all();
+          const fetchedAuthors = await drizzleDb.select().from(schema.author);
+          await new Promise(resolve => setTimeout(resolve, 500));
           setAuthors(fetchedAuthors);
         } catch (error) {
           console.error('Error fetching books:', error);
+        } finally {
+          setLoading(false);
         }
     };
 
     // Function to get series list
       const getSeriesList = async () => {
+          setLoading(true);
           try {
-            const fetchedSeries = await drizzleDb.select().from(schema.series).all();
+            const fetchedSeries = await drizzleDb.select().from(schema.series);
+            await new Promise(resolve => setTimeout(resolve, 500));
             setSeriesList(fetchedSeries);
           } catch (error) {
             console.error('Error fetching series:', error);
+          } finally {
+            setLoading(false);
           }
         };
 
     // Function to get genres list
     const getGenres = async () => {
+          setLoading(true);
           try {
-            const fetchedGenres = await drizzleDb.select().from(schema.genre).all();
+            const fetchedGenres = await drizzleDb.select().from(schema.genre);
+            await new Promise(resolve => setTimeout(resolve,500))
             setGenres(fetchedGenres);
           } catch (error) {
             console.error('Error fetching genres:', error);
@@ -119,12 +131,14 @@ export default function AddBookScreen() {
         let authorID = author;
         let seriesID = series;
         let genreID = genre;
+        setLoading(true)
 
-        // If a new author is being created, insert it into the database
-        if (createAuthor && newAuthorName.trim() !== '') {
+        try{
+          // If a new author is being created, insert it into the database
+          if (createAuthor && newAuthorName.trim() !== '') {
             console.log('Create New Author Detected:', newAuthorName);
             const newAuthorData: schema.NewAuthor = {
-                name: newAuthorName.trim(),
+              name: newAuthorName.trim(),
             };
             // Check if the author already exists
             const existingAuthor = await drizzleDb.select().from(schema.author).where(eq(schema.author.name, (newAuthorData.name))).limit(1);
@@ -133,36 +147,31 @@ export default function AddBookScreen() {
               console.log('Author already exists:', existingAuthor[0]);
               authorID = existingAuthor[0].id;
             } else {
-            try {
               // Insert new author and retrieve the inserted ID
-              const newAuthorRow = await drizzleDb.insert(schema.author).values(newAuthorData).returning({ insertedId: schema.author.id}).run();
+              const newAuthorRow = await drizzleDb.insert(schema.author).values(newAuthorData).returning();
               // Set the author ID to the newly created author
               console.log('New Author Created:', newAuthorRow);
-              console.log('New Author ID:', newAuthorRow.lastInsertRowId);
-              authorID = newAuthorRow.lastInsertRowId; 
-            } catch (error) {
-              console.error('Error adding new author:', error);
-              alert('Failed to add author');
-              return; // Exit if author creation fails
-            }}
-        };
+              console.log('New Author ID:', newAuthorRow[0].id);
+              authorID = newAuthorRow[0].id; 
+            }
+          };
 
-        // Does the selected series belong to the selected author?
-        if (seriesID && authorID && !createSeries) {
+          // Does the selected series belong to the selected author?
+          if (seriesID && authorID && !createSeries) {
             const seriesCheck = await drizzleDb.select().from(schema.series).where(and(eq(schema.series.id, seriesID), eq(schema.series.author_id, authorID))).limit(1);
             if (seriesCheck.length === 0) {
-                console.error('Selected series does not belong to the selected author');
-                alert('Selected series does not belong to the selected author');
-                return; // Exit if the series does not belong to the author
+              console.error('Selected series does not belong to the selected author');
+              alert('Selected series does not belong to the selected author');
+              return; // Exit if the series does not belong to the author
             }
-        }
+          };
 
-        // If a new series is being created, insert it into the database
-        if (createSeries && newSeriesName.trim() !== '' && authorID) {
+          // If a new series is being created, insert it into the database
+          if (createSeries && newSeriesName.trim() !== '' && authorID) {
             console.log('Create New Series Detected:', newSeriesName);
             const newSeriesData: schema.NewSeries = {
-                name: newSeriesName.trim(),
-                author_id: authorID
+              name: newSeriesName.trim(),
+              author_id: authorID
             };
             // Check if the series already exists
             const existingSeries = await drizzleDb.select().from(schema.series).where(and(eq(schema.series.name, newSeriesData.name), eq(schema.series.author_id, authorID))).limit(1);
@@ -171,25 +180,20 @@ export default function AddBookScreen() {
               console.log('Series already exists:', existingSeries[0]);
               seriesID = existingSeries[0].id;
             } else {
-            try {
               // Insert new series and retrieve the inserted ID
-              const newSeriesRow = await drizzleDb.insert(schema.series).values(newSeriesData).returning({ insertedId: schema.series.id}).run();
+              const newSeriesRow = await drizzleDb.insert(schema.series).values(newSeriesData).returning();
               // Set the series ID to the newly created series
               console.log('New Series Created:', newSeriesRow);
-              console.log('New Series ID:', newSeriesRow.lastInsertRowId);
-              seriesID = newSeriesRow.lastInsertRowId; 
-            } catch (error) {
-              console.error('Error adding new series:', error);
-              alert('Failed to add series');
-              return; // Exit if author creation fails
-            }}
-        };
+              console.log('New Series ID:', newSeriesRow[0].id);
+              seriesID = newSeriesRow[0].id; 
+            }
+          };
 
-        // If a new genre is being created, insert it into the database
-        if (createGenre && newGenreName.trim() !== '') {
+          // If a new genre is being created, insert it into the database
+          if (createGenre && newGenreName.trim() !== '') {
             console.log('Create New Genre Detected:', newGenreName);
             const newGenreData: schema.NewGenre = {
-                name: newGenreName.trim(),
+              name: newGenreName.trim(),
             };
             // Check if the genre already exists
             const existingGenre= await drizzleDb.select().from(schema.genre).where(eq(schema.genre.name, (newGenreData.name))).limit(1);
@@ -198,64 +202,63 @@ export default function AddBookScreen() {
               console.log('Genre already exists:', existingGenre[0]);
               genreID = existingGenre[0].id;
             } else {
-            try {
               // Insert new genre and retrieve the inserted ID
-              const newGenreRow = await drizzleDb.insert(schema.genre).values(newGenreData).returning({ insertedId: schema.genre.id}).run();
+              const newGenreRow = await drizzleDb.insert(schema.genre).values(newGenreData).returning();
               // Set the author ID to the newly created author
               console.log('New Genre Created:', newGenreRow);
-              console.log('New Genre ID:', newGenreRow.lastInsertRowId);
-              genreID = newGenreRow.lastInsertRowId; 
-            } catch (error) {
-              console.error('Error adding new genre:', error);
-              alert('Failed to add genre');
-              return; // Exit if author creation fails
-            }}
-        };
-
-
-        const bookData: schema.NewBook = {
-            title: title,
-            author_id: authorID,
-            series_id: seriesID,
-            genre_id: genreID,
-            owned: owned ? 1 : 0,
-        };
-
-
-
-        try {
-              console.log('Adding book with data:', bookData);
-              const newBookRow = await drizzleDb.insert(schema.book).values(bookData).returning().run();
-              setTitle('');
-              setAuthor(undefined);
-              setSeries(undefined);
-              setGenre(undefined);
-              setOwned(false);
-              setCreateAuthor(false);
-              setCreateSeries(false);
-              setCreateGenre(false);
-              setNewAuthorName('');
-              setNewSeriesName('');
-              setNewGenreName('');
-              
-              
-              console.log('Book added:', newBookRow);
-              alert('Book added!');
-              router.push('/'); // Navigate back to the book list
-            } catch (error) {
-              console.error(error);
-              alert('Failed to add book');
+              console.log('New Genre ID:', newGenreRow[0].id);
+              genreID = newGenreRow[0].id;
             }
+          };
+
+          const bookData: schema.NewBook = {
+              title: title,
+              author_id: authorID,
+              series_id: seriesID,
+              genre_id: genreID,
+              owned: owned ? 1 : 0,
+          };
+
+          console.log('Adding book with data:', bookData);
+          const newBookRow = await drizzleDb.insert(schema.book).values(bookData).returning();
+            setTitle('');
+            setAuthor(undefined);
+            setSeries(undefined);
+            setGenre(undefined);
+            setOwned(false);
+            setCreateAuthor(false);
+            setCreateSeries(false);
+            setCreateGenre(false);
+            setNewAuthorName('');
+            setNewSeriesName('');
+            setNewGenreName('');
+   
+          console.log('Book added:', newBookRow);
+          alert('Book added!');
+          router.push('/'); // Navigate back to the book list
+
+        } catch (error) {
+          console.error('Error adding book:', error);
+          alert(error instanceof Error ? error.message : 'Failed to add book');
+        } finally {
+          setLoading(false)
+        }
     }
 
 
     return (
+      loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#00ffcc" />
+        </View>
+      ) : (
         //<SafeAreaView style={{ flex: 1 }}>
-          <ScrollView
-            style={styles.scrollContainer}>
-
+          <CustomScrollView >
+          <View
+            style={styles.scrollContainer}
+          >
             {/* Title Section */}
-            <ThemedView className='py-2' style={styles.titleContainer}>
+            <ThemedView style={[styles.titleContainer]}>
                 <ThemedText type="title">Add a New Book</ThemedText>
             </ThemedView>
 
@@ -431,7 +434,10 @@ export default function AddBookScreen() {
 
                   {/* add book button */}
                 <View style={{ alignItems: "center" }}>
-                  <TouchableOpacity style={[myStyles.button]} onPress={addBook} >
+                  <TouchableOpacity 
+                    style={[myStyles.button, {marginVertical: 10}]} 
+                    onPress={addBook} 
+                  >
                     <Text style={[myStyles.buttonText]}>
                       Add Book
                     </Text>
@@ -439,12 +445,13 @@ export default function AddBookScreen() {
                 </View>
 
             </ThemedView>
-
-          </ScrollView>
+          
+          </View>
+          </CustomScrollView>
 
         //</SafeAreaView>
 
-    );
+    ));
 }
 
 const styles = StyleSheet.create({
@@ -453,18 +460,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignContent: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
-    paddingBottom: 20,
+    paddingTop: 25,
+    paddingBottom: 10,
+    marginVertical: 20,
   },
   scrollContainer: {
+    paddingTop: 50,
     paddingHorizontal: 16,
-    backgroundColor: 'blue',
+    //backgroundColor: 'blue',
     height: '100%',
   },
   formContainer: {
     gap: 10,
-    paddingTop: 20, // additional padding inside the safe area
-    paddingBottom: 20,
+    paddingTop: 10, // additional padding inside the safe area
+    paddingBottom: 10,
     paddingHorizontal: 25,
     //height: '100%',
     height: '100%',
@@ -475,7 +484,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 25,
     padding: 15,
-    marginVertical: 2,
+    marginVertical: 1,
     height: 80,
     color: '#fff',
     fontSize: 16,
@@ -488,7 +497,7 @@ const styles = StyleSheet.create({
     //borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 25,
-    marginVertical: 2,
+    marginVertical: 1,
     height: 80,
     color: 'white',
     flex: 1,
@@ -515,7 +524,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 25,
-    marginVertical: 2,
+    marginVertical: 1,
     paddingHorizontal: 10,
     height: 80,
     backgroundColor: 'black',

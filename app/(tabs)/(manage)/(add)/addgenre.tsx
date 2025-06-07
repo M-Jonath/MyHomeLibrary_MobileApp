@@ -36,7 +36,7 @@ export default function AddAuthorScreen() {
 
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        //<SafeAreaView style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContainer}>
 
             {/* Title Section */}
@@ -68,7 +68,7 @@ export default function AddAuthorScreen() {
             </ThemedView>
             
           </ScrollView>
-        </SafeAreaView>
+        //</SafeAreaView>
 
     );
 }
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingHorizontal: 16,
-    backgroundColor: 'darkred',
+    //backgroundColor: 'darkred',
     height: '100%',
   },
   formContainer: {
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 25,
     height: '100%',
-    backgroundColor: 'black',
+    //backgroundColor: 'black',
   },
   input: {
     borderWidth: 1,
@@ -102,7 +102,8 @@ const styles = StyleSheet.create({
     padding: 15,
     marginVertical: 2,
     height: 80,
-    color: '#fff',
+    backgroundColor: '#151515',
+    color: 'white',
     fontSize: 16,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,10 +1,10 @@
 import { Tabs } from 'expo-router';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { ActivityIndicator, Platform } from 'react-native';
-import { openDatabaseSync, SQLiteProvider } from 'expo-sqlite';
+import * as SQLite from 'expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import migrations from '@/drizzle/migrations';
-
+import { useDrizzleStudio } from 'expo-drizzle-studio-plugin'
 
 import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -18,13 +18,18 @@ const dbname = 'mylibrary.db';
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   // Ensure the database is created and opened
-  const expoDb = openDatabaseSync(dbname);
+  const expoDb = SQLite.openDatabaseSync(dbname);
   const db = drizzle(expoDb);
   const { success, error} = useMigrations(db, migrations);
 
+  // Only open and pass database in dev mode
+  if (__DEV__) {
+    useDrizzleStudio(expoDb);
+  }
+
   return (
     <Suspense fallback = { <ActivityIndicator size = "large" color = { Colors[colorScheme ?? 'light'].tint } /> } > 
-      <SQLiteProvider
+      <SQLite.SQLiteProvider
         databaseName= { dbname }
         options={{ enableChangeListener: true }}
         useSuspense>
@@ -71,7 +76,7 @@ export default function TabLayout() {
               }}
             />
         </Tabs>
-      </SQLiteProvider>
+      </SQLite.SQLiteProvider>
     </Suspense>
   );
 }

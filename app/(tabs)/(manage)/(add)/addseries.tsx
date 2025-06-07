@@ -85,30 +85,32 @@ export default function AddSeriesScreen() {
                 />
 
                 {/* Dropdown to select the author */}
-                <Picker
-                selectedValue={author}
-                onValueChange={(itemValue) => setAuthor(itemValue)}
-                style={[styles.picker]}
-                itemStyle={[styles.pickeritem]}
-                >
-                    {/* 1) default option */}
-                    <Picker.Item
-                        key="default"
-                        label={authors.length === 0 ? 'No authors found' : 'Select author'}
-                        value={null}
-                        enabled={authors.length > 0}
-                        color={authors.length === 0 ? '#888' : undefined}
-                    />
+                <View style={[styles.pickerRow]}>
+                  <Picker
+                  selectedValue={author}
+                  onValueChange={(itemValue) => setAuthor(itemValue)}
+                  style={[styles.picker]}
+                  itemStyle={[styles.pickeritem]}
+                  >
+                      {/* 1) default option */}
+                      <Picker.Item
+                          key="default"
+                          label={authors.length === 0 ? 'No authors found' : 'Select author'}
+                          value={null}
+                          enabled={authors.length > 0}
+                          color={authors.length === 0 ? '#888' : undefined}
+                      />
 
-                    {/* 2) if we have authors, map them out */}
-                    {authors.map((a) => (
-                        <Picker.Item
-                        key={a.id}
-                        label={a.name}
-                        value={a.id}
-                        />
-                    ))}
-                </Picker>
+                      {/* 2) if we have authors, map them out */}
+                      {authors.map((a) => (
+                          <Picker.Item
+                          key={a.id}
+                          label={a.name}
+                          value={a.id}
+                          />
+                      ))}
+                  </Picker>
+                </View>
 
                 {/* Button to submit the new sereis */}
                 <View style={{ alignItems: "center" }}>
@@ -120,11 +122,11 @@ export default function AddSeriesScreen() {
                 </View>
 
 
-                {authors.map((author) => (
+                {/* {authors.map((author) => (
                                 <Text style= {{ color: 'red'}}>
                                 {author.name} - {author.id}
                                 </Text>
-                            ))}
+                            ))} */}
 
             </ThemedView>
             
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 25,
     height: '100%',
-    backgroundColor: 'black',
+    //backgroundColor: 'black',
   },
   input: {
     borderWidth: 1,
@@ -168,18 +170,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     textAlign: 'center',
+    backgroundColor: '#505050'
   },
   picker: {
-    borderWidth: 1,
+    //borderWidth: 1,
     borderColor: '#fff',
     borderRadius: 25,
-    marginVertical: 2,
+    marginVertical: 1,
     height: 80,
+    color: 'white',
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   pickeritem: {
     height: 80,
     fontSize: 16,
     color: 'white',
+    width: '100%',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 25,
+    marginVertical: 1,
+    paddingHorizontal: 10,
+    height: 80,
+    backgroundColor: '#505050',
+    width: '100%',
   },
   reactLogo: {
     height: 178,

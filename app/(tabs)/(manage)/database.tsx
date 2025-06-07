@@ -34,6 +34,21 @@ export default function DatabaseScreen() {
     }
   };
 
+
+  // Reset DB: delete then re-initialize schema
+  const deleteDatabase = async () => {
+    console.log('Delete Database Started')
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(dbPath);
+      if (fileInfo.exists) {
+        await FileSystem.deleteAsync(dbPath, { idempotent: true });
+      }
+    } catch (error) {
+      console.error('Reset error:', error);
+      Alert.alert('Error', 'Failed to reset database');
+    }
+  };
+
   const exportDatabase = async () => {
     try {
       const fileInfo = await FileSystem.getInfoAsync(dbPath);
@@ -71,6 +86,7 @@ export default function DatabaseScreen() {
 
   return (
     <View style={{ padding: 20 }}>
+      <View style={{ height: 80 }} />
       <Text>{dbPath}</Text>
 
       <Button title="Export Database" onPress={exportDatabase} />
@@ -80,6 +96,11 @@ export default function DatabaseScreen() {
       <View style={{ height: 20 }} />
 
       <Button title="Reset Database" onPress={resetDatabase} />
+      <View style={{ height: 20 }} />
+
+      <Button title="Delete Database" onPress={deleteDatabase} />
+
+  
     </View>
   );
 }

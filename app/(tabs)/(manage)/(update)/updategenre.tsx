@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingHorizontal: 16,
-    backgroundColor: 'darkred',
+    //backgroundColor: 'darkred',
     height: '100%',
   },
   formContainer: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     paddingHorizontal: 25,
     height: '100%',
-    backgroundColor: 'black',
+    //backgroundColor: 'black',
   },
   input: {
     borderWidth: 1,
@@ -131,5 +131,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     textAlign: 'center',
+    backgroundColor: '#151515'
   },
 });
