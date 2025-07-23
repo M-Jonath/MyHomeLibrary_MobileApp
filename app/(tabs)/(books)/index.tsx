@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { myStyles } from '@/constants/stylesheet';
 import { useRouter } from 'expo-router';
@@ -25,6 +25,18 @@ export default function HomeScreen() {
 
 
   const router = useRouter();
+
+
+  const booksWithDetailsRef = useRef(booksWithDetails);
+  const ownedStatesRef = useRef(ownedStates);
+
+  useEffect(() => {
+    booksWithDetailsRef.current = booksWithDetails;
+  }, [booksWithDetails]);
+
+  useEffect(() => {
+    ownedStatesRef.current = ownedStates;
+  }, [ownedStates]);
 
   const getBooksWithDetails = async () => {
     setLoading(true);
@@ -82,12 +94,34 @@ export default function HomeScreen() {
 
   // Re-fetch books when the screen is focused
   useFocusEffect(
-    useCallback(() => {
-      getBooksWithDetails();
-      //const initialStates = Object.fromEntries(booksWithDetails.map(b => [b.book.id, b.book.owned === 1]));
-      //setOwnedStates(initialStates);
-    }, [])
-  );
+  useCallback(() => {
+    getBooksWithDetails();
+
+    // Update owned states when the component unmounts
+    return () => {
+      // Use refs here to get latest states safely
+      (async () => {
+        setLoading(true);
+        try {
+          await Promise.all(
+            booksWithDetailsRef.current.map((book) =>
+              drizzleDb
+                .update(schema.book)
+                .set({ owned: ownedStatesRef.current[book.book.id] ? 1 : 0 })
+                .where(eq(schema.book.id, book.book.id))
+            )
+          );
+        } catch (error) {
+          console.error('Error updating owned status', error);
+          alert(`Error updating owned status: ${error}`);
+        } finally {
+          setLoading(false);
+        }
+      })();
+    };
+  }, [])
+);
+
 
   return (
     loading? (
@@ -110,6 +144,7 @@ export default function HomeScreen() {
       {/* Title */}
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome To Your Digital Library!</ThemedText>
+        <ThemedText type="subtitle">v1.0.1</ThemedText>
       </ThemedView>
 
       {/* Subtitle */}
@@ -151,23 +186,12 @@ export default function HomeScreen() {
                   <ThemedText style={{ fontSize:12, color: 'white' }}>Owned:</ThemedText>
                   <Switch
                     value={ownedStates[b.book.id] ?? false}
-                    onValueChange={
-                      async (newValue) => {
-                        setLoading(true)
-                        try{
-                          setOwnedStates(prev => ({ ...prev, [b.book.id]: newValue }));
-                          await drizzleDb
-                            .update(schema.book)
-                            .set({ owned: newValue ? 1 : 0 })
-                            .where(eq(schema.book.id, b.book.id));
-                        } catch(error) {
-                          console.error('Error updating book owned status:', error);
-                          alert('Failed to update owned status');
-                        } finally {
-                          setLoading(false)
-                        }
-                      }
-                    }
+                    onValueChange={(newValue) => {
+                      setOwnedStates((prev) => ({
+                        ...prev,
+                        [b.book.id]: newValue,
+                      }));
+                    }}
                   />
                 </View>
                 
